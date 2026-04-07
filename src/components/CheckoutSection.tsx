@@ -62,6 +62,22 @@ const CheckoutSection = () => {
     "১০০% অরিজিনাল প্রডাক্ট",
   ];
 
+  if (orderPlaced) {
+    return (
+      <div className="bg-card rounded-3xl border border-border p-8 shadow-lg text-center">
+        <div className="text-6xl mb-4">🎉</div>
+        <h3 className="text-2xl font-bold text-foreground mb-2">অর্ডার সফল হয়েছে!</h3>
+        <p className="text-muted-foreground mb-6">আমরা শীঘ্রই আপনার সাথে যোগাযোগ করবো। ধন্যবাদ!</p>
+        <button
+          onClick={() => { setOrderPlaced(false); setName(""); setPhone(""); setAddress(""); setQuantity(1); }}
+          className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold"
+        >
+          আরেকটি অর্ডার করুন
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-card rounded-3xl border border-border p-6 md:p-8 shadow-lg">
       <h3 className="text-2xl font-bold text-foreground mb-2">অর্ডার করুন 🎈</h3>

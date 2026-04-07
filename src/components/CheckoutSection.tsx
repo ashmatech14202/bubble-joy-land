@@ -46,9 +46,6 @@ const CheckoutSection = () => {
       return;
     }
 
-    // Also send to WhatsApp
-    const message = `🛒 *নতুন অর্ডার — বাবল গান*%0A%0A👤 নাম: ${name}%0A📞 ফোন: ${phone}%0A📍 ঠিকানা: ${address}%0A🚚 ডেলিভারি: ${deliveryArea === "inside" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}%0A📦 পরিমাণ: ${quantity} পিস%0A💰 মোট: ৳${total}`;
-    window.open(`https://wa.me/+8801898883577?text=${message}`, "_blank");
 
     setOrderPlaced(true);
     setSubmitting(false);

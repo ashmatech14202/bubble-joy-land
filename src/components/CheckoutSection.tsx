@@ -198,11 +198,13 @@ const CheckoutSection = () => {
       {/* CTA */}
       <motion.button
         onClick={handleOrder}
-        className="w-full bg-cta-gradient text-secondary-foreground py-4 rounded-2xl text-lg font-bold shadow-warm"
+        disabled={submitting}
+        className="w-full bg-cta-gradient text-secondary-foreground py-4 rounded-2xl text-lg font-bold shadow-warm disabled:opacity-50"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        🛒 অর্ডার কনফার্ম করুন
+        {submitting ? "⏳ অর্ডার হচ্ছে..." : "🛒 অর্ডার কনফার্ম করুন"}
+      </motion.button>
       </motion.button>
 
       {/* Benefits */}

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Package, Clock, Truck, CheckCircle, XCircle, RefreshCw,
   Eye, Pencil, Trash2, X, RotateCcw, CreditCard, Send, ArrowRight,
-  Plus, ShoppingBag, BoxIcon, Settings, Save,
+  Plus, ShoppingBag, BoxIcon, Settings, Save, Upload, Image,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +55,8 @@ const AdminDashboard = () => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: 0, image_url: "", stock: 0, is_active: true });
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -127,6 +129,23 @@ const AdminDashboard = () => {
     toast({ title: "অর্ডার আপডেট হয়েছে" });
   };
 
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const { error } = await supabase.storage.from("product-images").upload(fileName, file);
+    if (error) {
+      toast({ title: "ছবি আপলোড হয়নি", variant: "destructive" });
+      setUploadingImage(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
+    setNewProduct((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+    setImagePreview(urlData.publicUrl);
+    setUploadingImage(false);
+    toast({ title: "ছবি আপলোড হয়েছে ✅" });
+  };
+
   const handleAddProduct = async () => {
     if (!newProduct.name || newProduct.price <= 0) {
       toast({ title: "নাম ও মূল্য দিন", variant: "destructive" });
@@ -146,6 +165,7 @@ const AdminDashboard = () => {
     }
     setProducts((prev) => [data, ...prev]);
     setNewProduct({ name: "", description: "", price: 0, image_url: "", stock: 0, is_active: true });
+    setImagePreview(null);
     setShowAddProduct(false);
     toast({ title: "প্রোডাক্ট যোগ হয়েছে" });
   };
@@ -615,8 +635,27 @@ const AdminDashboard = () => {
                     onChange={(e) => setNewProduct({ ...newProduct, price: Math.max(0, parseInt(e.target.value) || 0) })}
                     className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
-                <EditField label="ছবির URL" value={newProduct.image_url}
-                  onChange={(v) => setNewProduct({ ...newProduct, image_url: v })} />
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">প্রোডাক্টের ছবি</label>
+                  {imagePreview || newProduct.image_url ? (
+                    <div className="relative rounded-xl overflow-hidden bg-muted mb-2">
+                      <img src={imagePreview || newProduct.image_url} alt="Preview" className="w-full h-40 object-cover" />
+                      <button onClick={() => { setImagePreview(null); setNewProduct({ ...newProduct, image_url: "" }); }}
+                        className="absolute top-2 right-2 p-1 rounded-full bg-foreground/60 text-background hover:bg-foreground/80">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <label className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-border text-sm cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all ${uploadingImage ? "opacity-50 pointer-events-none" : ""}`}>
+                    <input type="file" accept="image/*" className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+                    {uploadingImage ? (
+                      <><RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />আপলোড হচ্ছে...</>
+                    ) : (
+                      <><Upload className="w-4 h-4 text-muted-foreground" /><span className="text-muted-foreground">ছবি আপলোড করুন</span></>
+                    )}
+                  </label>
+                </div>
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">স্টক</label>
                   <input type="number" min={0} value={newProduct.stock}

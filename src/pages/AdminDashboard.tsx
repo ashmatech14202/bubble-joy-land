@@ -635,8 +635,27 @@ const AdminDashboard = () => {
                     onChange={(e) => setNewProduct({ ...newProduct, price: Math.max(0, parseInt(e.target.value) || 0) })}
                     className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
                 </div>
-                <EditField label="ছবির URL" value={newProduct.image_url}
-                  onChange={(v) => setNewProduct({ ...newProduct, image_url: v })} />
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">প্রোডাক্টের ছবি</label>
+                  {imagePreview || newProduct.image_url ? (
+                    <div className="relative rounded-xl overflow-hidden bg-muted mb-2">
+                      <img src={imagePreview || newProduct.image_url} alt="Preview" className="w-full h-40 object-cover" />
+                      <button onClick={() => { setImagePreview(null); setNewProduct({ ...newProduct, image_url: "" }); }}
+                        className="absolute top-2 right-2 p-1 rounded-full bg-foreground/60 text-background hover:bg-foreground/80">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : null}
+                  <label className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-border text-sm cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all ${uploadingImage ? "opacity-50 pointer-events-none" : ""}`}>
+                    <input type="file" accept="image/*" className="hidden"
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+                    {uploadingImage ? (
+                      <><RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />আপলোড হচ্ছে...</>
+                    ) : (
+                      <><Upload className="w-4 h-4 text-muted-foreground" /><span className="text-muted-foreground">ছবি আপলোড করুন</span></>
+                    )}
+                  </label>
+                </div>
                 <div>
                   <label className="text-xs text-muted-foreground block mb-1">স্টক</label>
                   <input type="number" min={0} value={newProduct.stock}

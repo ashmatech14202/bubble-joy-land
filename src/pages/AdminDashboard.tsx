@@ -173,6 +173,46 @@ const AdminDashboard = () => {
     toast({ title: "প্রোডাক্ট যোগ হয়েছে" });
   };
 
+  const handleEditProductSave = async () => {
+    if (!editingProduct) return;
+    let imageUrl = editingProduct.image_url;
+
+    if (editProductImage) {
+      setUploadingImage(true);
+      const fileExt = editProductImage.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const { error } = await supabase.storage.from("product-images").upload(fileName, editProductImage);
+      if (error) {
+        toast({ title: "ছবি আপলোড হয়নি", variant: "destructive" });
+        setUploadingImage(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
+      imageUrl = urlData.publicUrl;
+      setUploadingImage(false);
+    }
+
+    const { error } = await supabase.from("products").update({
+      name: editingProduct.name,
+      description: editingProduct.description,
+      price: editingProduct.price,
+      image_url: imageUrl,
+      stock: editingProduct.stock,
+      is_active: editingProduct.is_active,
+    }).eq("id", editingProduct.id);
+
+    if (error) {
+      toast({ title: "আপডেট হয়নি", variant: "destructive" });
+      return;
+    }
+
+    setProducts((prev) => prev.map((p) => p.id === editingProduct.id ? { ...p, name: editingProduct.name, description: editingProduct.description, price: editingProduct.price, image_url: imageUrl, stock: editingProduct.stock, is_active: editingProduct.is_active } : p));
+    setEditingProduct(null);
+    setEditProductImage(null);
+    setEditProductImagePreview(null);
+    toast({ title: "প্রোডাক্ট আপডেট হয়েছে ✅" });
+  };
+
   const handleDeleteProduct = async (productId: string) => {
     await supabase.from("products").delete().eq("id", productId);
     setProducts((prev) => prev.filter((p) => p.id !== productId));

@@ -96,7 +96,15 @@ export type Database = {
     Enums: {
       app_role: "admin" | "moderator" | "user"
       delivery_area: "inside_dhaka" | "outside_dhaka"
-      order_status: "pending" | "confirmed" | "delivered" | "cancelled"
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "processing"
+        | "shipped"
+        | "delivered"
+        | "returned"
+        | "refunded"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -226,7 +234,16 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "moderator", "user"],
       delivery_area: ["inside_dhaka", "outside_dhaka"],
-      order_status: ["pending", "confirmed", "delivered", "cancelled"],
+      order_status: [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "returned",
+        "refunded",
+        "cancelled",
+      ],
     },
   },
 } as const

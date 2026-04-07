@@ -212,6 +212,12 @@ const AdminDashboard = () => {
             }`}>
             <BoxIcon className="w-4 h-4" />প্রোডাক্ট
           </button>
+          <button onClick={() => setActiveTab("settings")}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "settings" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}>
+            <Settings className="w-4 h-4" />সেটিংস
+          </button>
         </div>
       </div>
 

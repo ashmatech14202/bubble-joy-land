@@ -42,6 +42,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<"orders" | "products" | "settings">("orders");
   const [fbPixelId, setFbPixelId] = useState("");
   const [fbCapiToken, setFbCapiToken] = useState("");
+  const [copyrightText, setCopyrightText] = useState("© ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত");
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -79,18 +80,30 @@ const AdminDashboard = () => {
 
   const fetchSettings = async () => {
     setSettingsLoading(true);
-    const { data } = await supabase.from("site_settings").select("key, value").in("key", ["fb_pixel_id", "fb_capi_token"]);
+    const { data } = await supabase.from("site_settings").select("key, value").in("key", ["fb_pixel_id", "fb_capi_token", "copyright_text"]);
     if (data) {
       setFbPixelId(data.find((s) => s.key === "fb_pixel_id")?.value || "");
       setFbCapiToken(data.find((s) => s.key === "fb_capi_token")?.value || "");
+      setCopyrightText(data.find((s) => s.key === "copyright_text")?.value || "© ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত");
     }
     setSettingsLoading(false);
   };
 
   const handleSaveSettings = async () => {
     setSettingsSaving(true);
-    await supabase.from("site_settings").update({ value: fbPixelId }).eq("key", "fb_pixel_id");
-    await supabase.from("site_settings").update({ value: fbCapiToken }).eq("key", "fb_capi_token");
+    const upsertKeys = [
+      { key: "fb_pixel_id", value: fbPixelId },
+      { key: "fb_capi_token", value: fbCapiToken },
+      { key: "copyright_text", value: copyrightText },
+    ];
+    for (const item of upsertKeys) {
+      const { data: existing } = await supabase.from("site_settings").select("id").eq("key", item.key).maybeSingle();
+      if (existing) {
+        await supabase.from("site_settings").update({ value: item.value }).eq("key", item.key);
+      } else {
+        await supabase.from("site_settings").insert(item);
+      }
+    }
     setSettingsSaving(false);
     toast({ title: "সেটিংস সেভ হয়েছে ✅" });
   };
@@ -485,6 +498,20 @@ const AdminDashboard = () => {
                   />
                   <p className="text-xs text-muted-foreground mt-1">Events Manager → Settings → Generate Access Token</p>
                 </div>
+
+                <hr className="border-border my-6" />
+                <h2 className="text-xl font-bold text-foreground mb-1">কপিরাইট টেক্সট</h2>
+                <p className="text-sm text-muted-foreground mb-4">ফুটারে যে টেক্সট দেখাবে</p>
+                <div>
+                  <input
+                    type="text"
+                    value={copyrightText}
+                    onChange={(e) => setCopyrightText(e.target.value)}
+                    placeholder="© ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত"
+                    className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  />
+                </div>
+
                 <button
                   onClick={handleSaveSettings}
                   disabled={settingsSaving}

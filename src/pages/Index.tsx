@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import HeroSection from "@/components/HeroSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import ReviewSlider from "@/components/ReviewSlider";
@@ -5,9 +6,23 @@ import ProductGallery from "@/components/ProductGallery";
 import CheckoutSection from "@/components/CheckoutSection";
 import ProductListSection from "@/components/ProductListSection";
 import { useFacebookPixel } from "@/hooks/useFacebookPixel";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   useFacebookPixel();
+  const [copyrightText, setCopyrightText] = useState("© ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত");
+
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("key", "copyright_text")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setCopyrightText(data.value);
+      });
+  }, []);
+
   return (
     <main className="min-h-screen">
       <HeroSection />
@@ -28,7 +43,7 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-foreground py-8 text-center">
         <p className="text-primary-foreground/60 text-sm">
-          © ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত
+          {copyrightText}
         </p>
       </footer>
     </main>

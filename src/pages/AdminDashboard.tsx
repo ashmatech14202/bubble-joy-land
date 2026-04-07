@@ -129,6 +129,23 @@ const AdminDashboard = () => {
     toast({ title: "অর্ডার আপডেট হয়েছে" });
   };
 
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const { error } = await supabase.storage.from("product-images").upload(fileName, file);
+    if (error) {
+      toast({ title: "ছবি আপলোড হয়নি", variant: "destructive" });
+      setUploadingImage(false);
+      return;
+    }
+    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
+    setNewProduct((prev) => ({ ...prev, image_url: urlData.publicUrl }));
+    setImagePreview(urlData.publicUrl);
+    setUploadingImage(false);
+    toast({ title: "ছবি আপলোড হয়েছে ✅" });
+  };
+
   const handleAddProduct = async () => {
     if (!newProduct.name || newProduct.price <= 0) {
       toast({ title: "নাম ও মূল্য দিন", variant: "destructive" });
@@ -148,6 +165,7 @@ const AdminDashboard = () => {
     }
     setProducts((prev) => [data, ...prev]);
     setNewProduct({ name: "", description: "", price: 0, image_url: "", stock: 0, is_active: true });
+    setImagePreview(null);
     setShowAddProduct(false);
     toast({ title: "প্রোডাক্ট যোগ হয়েছে" });
   };

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LogOut, Package, Clock, Truck, CheckCircle, XCircle, RefreshCw,
   Eye, Pencil, Trash2, X, RotateCcw, CreditCard, Send, ArrowRight,
-  Plus, ShoppingBag, BoxIcon, Settings, Save,
+  Plus, ShoppingBag, BoxIcon, Settings, Save, Upload, Image,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";

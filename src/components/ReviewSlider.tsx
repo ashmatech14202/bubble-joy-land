@@ -120,6 +120,16 @@ const ReviewSlider = () => {
               ))}
             </div>
           </div>
+
+          {/* CTA after slider */}
+          <div className="text-center mt-10">
+            <a
+              href="#order"
+              className="inline-block bg-cta-gradient text-secondary-foreground px-8 py-4 rounded-full text-lg font-bold shadow-warm hover:scale-105 transition-transform"
+            >
+              🛒 এখনই অর্ডার করুন — ৳৯৯০
+            </a>
+          </div>
         </div>
       </div>
     </section>

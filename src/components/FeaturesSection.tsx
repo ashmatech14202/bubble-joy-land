@@ -72,7 +72,10 @@ const FeaturesSection = () => {
                 <f.icon className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-2">{f.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">{f.desc}</p>
+              <p className="text-muted-foreground leading-relaxed mb-4">{f.desc}</p>
+              <a href="#order" className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                🛒 এখনই অর্ডার করুন →
+              </a>
             </motion.div>
           ))}
         </div>

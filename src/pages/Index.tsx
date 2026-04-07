@@ -3,12 +3,14 @@ import FeaturesSection from "@/components/FeaturesSection";
 import ReviewSlider from "@/components/ReviewSlider";
 import ProductGallery from "@/components/ProductGallery";
 import CheckoutSection from "@/components/CheckoutSection";
+import ProductListSection from "@/components/ProductListSection";
 
 const Index = () => {
   return (
     <main className="min-h-screen">
       <HeroSection />
       <FeaturesSection />
+      <ProductListSection />
       <ReviewSlider />
 
       {/* Product + Checkout Section */}

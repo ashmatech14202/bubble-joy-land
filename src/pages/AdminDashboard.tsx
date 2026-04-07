@@ -80,10 +80,11 @@ const AdminDashboard = () => {
 
   const fetchSettings = async () => {
     setSettingsLoading(true);
-    const { data } = await supabase.from("site_settings").select("key, value").in("key", ["fb_pixel_id", "fb_capi_token"]);
+    const { data } = await supabase.from("site_settings").select("key, value").in("key", ["fb_pixel_id", "fb_capi_token", "copyright_text"]);
     if (data) {
       setFbPixelId(data.find((s) => s.key === "fb_pixel_id")?.value || "");
       setFbCapiToken(data.find((s) => s.key === "fb_capi_token")?.value || "");
+      setCopyrightText(data.find((s) => s.key === "copyright_text")?.value || "© ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত");
     }
     setSettingsLoading(false);
   };

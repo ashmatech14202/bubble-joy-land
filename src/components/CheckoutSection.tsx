@@ -10,21 +10,49 @@ const CheckoutSection = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [deliveryArea, setDeliveryArea] = useState<"inside" | "outside">("outside");
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const unitPrice = 990;
   const deliveryCharge = deliveryArea === "inside" ? 60 : 120;
   const subtotal = unitPrice * quantity;
   const total = subtotal + deliveryCharge;
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
     if (!name || !phone || !address) {
-      alert("অনুগ্রহ করে সকল তথ্য পূরণ করুন");
+      toast({ title: "সকল তথ্য পূরণ করুন", variant: "destructive" });
       return;
     }
 
-    const message = `🛒 *নতুন অর্ডার — বাবল গান*%0A%0A👤 নাম: ${name}%0A📞 ফোন: ${phone}%0A📍 ঠিকানা: ${address}%0A🚚 ডেলিভারি: ${deliveryArea === "inside" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}%0A📦 পরিমাণ: ${quantity} পিস%0A💰 মোট: ৳${total}`;
+    setSubmitting(true);
 
+    // Save to database
+    const { error } = await supabase.from("orders").insert({
+      customer_name: name,
+      phone,
+      address,
+      delivery_area: deliveryArea === "inside" ? "inside_dhaka" : "outside_dhaka",
+      quantity,
+      unit_price: unitPrice,
+      delivery_charge: deliveryCharge,
+      total,
+    });
+
+    if (error) {
+      console.error(error);
+      toast({ title: "অর্ডার সেভ হয়নি, আবার চেষ্টা করুন", variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
+
+    // Also send to WhatsApp
+    const message = `🛒 *নতুন অর্ডার — বাবল গান*%0A%0A👤 নাম: ${name}%0A📞 ফোন: ${phone}%0A📍 ঠিকানা: ${address}%0A🚚 ডেলিভারি: ${deliveryArea === "inside" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}%0A📦 পরিমাণ: ${quantity} পিস%0A💰 মোট: ৳${total}`;
     window.open(`https://wa.me/+8801898883577?text=${message}`, "_blank");
+
+    setOrderPlaced(true);
+    setSubmitting(false);
+    toast({ title: "✅ অর্ডার সফলভাবে সম্পন্ন হয়েছে!" });
   };
 
   const benefits = [

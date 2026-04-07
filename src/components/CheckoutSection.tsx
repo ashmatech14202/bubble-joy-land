@@ -73,6 +73,23 @@ const CheckoutSection = () => {
       return;
     }
 
+    // Track Purchase event — browser pixel
+    trackFBEvent("Purchase", {
+      value: total,
+      currency: "BDT",
+      content_name: selectedProduct.name,
+    });
+
+    // Track Purchase event — server CAPI
+    sendServerEvent({
+      event_name: "Purchase",
+      customer_name: name,
+      phone,
+      value: total,
+      currency: "BDT",
+      content_name: selectedProduct.name,
+    });
+
     setOrderPlaced(true);
     setSubmitting(false);
     toast({ title: "✅ অর্ডার সফলভাবে সম্পন্ন হয়েছে!" });

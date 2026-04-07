@@ -42,6 +42,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<"orders" | "products" | "settings">("orders");
   const [fbPixelId, setFbPixelId] = useState("");
   const [fbCapiToken, setFbCapiToken] = useState("");
+  const [copyrightText, setCopyrightText] = useState("© ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত");
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);

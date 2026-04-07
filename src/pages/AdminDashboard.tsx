@@ -72,11 +72,30 @@ const AdminDashboard = () => {
     setLoading(false);
   };
 
+  const fetchSettings = async () => {
+    setSettingsLoading(true);
+    const { data } = await supabase.from("site_settings").select("key, value").in("key", ["fb_pixel_id", "fb_capi_token"]);
+    if (data) {
+      setFbPixelId(data.find((s) => s.key === "fb_pixel_id")?.value || "");
+      setFbCapiToken(data.find((s) => s.key === "fb_capi_token")?.value || "");
+    }
+    setSettingsLoading(false);
+  };
+
+  const handleSaveSettings = async () => {
+    setSettingsSaving(true);
+    await supabase.from("site_settings").update({ value: fbPixelId }).eq("key", "fb_pixel_id");
+    await supabase.from("site_settings").update({ value: fbCapiToken }).eq("key", "fb_capi_token");
+    setSettingsSaving(false);
+    toast({ title: "সেটিংস সেভ হয়েছে ✅" });
+  };
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) { navigate("/admin"); return; }
       fetchOrders();
       fetchProducts();
+      fetchSettings();
     });
   }, [navigate]);
 

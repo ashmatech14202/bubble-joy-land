@@ -498,6 +498,20 @@ const AdminDashboard = () => {
                   />
                   <p className="text-xs text-muted-foreground mt-1">Events Manager → Settings → Generate Access Token</p>
                 </div>
+
+                <hr className="border-border my-6" />
+                <h2 className="text-xl font-bold text-foreground mb-1">কপিরাইট টেক্সট</h2>
+                <p className="text-sm text-muted-foreground mb-4">ফুটারে যে টেক্সট দেখাবে</p>
+                <div>
+                  <input
+                    type="text"
+                    value={copyrightText}
+                    onChange={(e) => setCopyrightText(e.target.value)}
+                    placeholder="© ২০২৫ Libsun — সকল স্বত্ব সংরক্ষিত"
+                    className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  />
+                </div>
+
                 <button
                   onClick={handleSaveSettings}
                   disabled={settingsSaving}

@@ -54,6 +54,9 @@ const AdminDashboard = () => {
   const [deleteProductConfirm, setDeleteProductConfirm] = useState<string | null>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editProductImage, setEditProductImage] = useState<File | null>(null);
+  const [editProductImagePreview, setEditProductImagePreview] = useState<string | null>(null);
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: 0, image_url: "", stock: 0, is_active: true });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);

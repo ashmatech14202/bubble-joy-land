@@ -205,7 +205,6 @@ const CheckoutSection = () => {
       >
         {submitting ? "⏳ অর্ডার হচ্ছে..." : "🛒 অর্ডার কনফার্ম করুন"}
       </motion.button>
-      </motion.button>
 
       {/* Benefits */}
       <ul className="mt-6 space-y-2">

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Phone, Minus, Plus, MapPin, User, Truck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const CheckoutSection = () => {
   const [quantity, setQuantity] = useState(1);
@@ -8,21 +10,49 @@ const CheckoutSection = () => {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [deliveryArea, setDeliveryArea] = useState<"inside" | "outside">("outside");
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const unitPrice = 990;
   const deliveryCharge = deliveryArea === "inside" ? 60 : 120;
   const subtotal = unitPrice * quantity;
   const total = subtotal + deliveryCharge;
 
-  const handleOrder = () => {
+  const handleOrder = async () => {
     if (!name || !phone || !address) {
-      alert("অনুগ্রহ করে সকল তথ্য পূরণ করুন");
+      toast({ title: "সকল তথ্য পূরণ করুন", variant: "destructive" });
       return;
     }
 
-    const message = `🛒 *নতুন অর্ডার — বাবল গান*%0A%0A👤 নাম: ${name}%0A📞 ফোন: ${phone}%0A📍 ঠিকানা: ${address}%0A🚚 ডেলিভারি: ${deliveryArea === "inside" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}%0A📦 পরিমাণ: ${quantity} পিস%0A💰 মোট: ৳${total}`;
+    setSubmitting(true);
 
+    // Save to database
+    const { error } = await supabase.from("orders").insert({
+      customer_name: name,
+      phone,
+      address,
+      delivery_area: deliveryArea === "inside" ? "inside_dhaka" : "outside_dhaka",
+      quantity,
+      unit_price: unitPrice,
+      delivery_charge: deliveryCharge,
+      total,
+    });
+
+    if (error) {
+      console.error(error);
+      toast({ title: "অর্ডার সেভ হয়নি, আবার চেষ্টা করুন", variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
+
+    // Also send to WhatsApp
+    const message = `🛒 *নতুন অর্ডার — বাবল গান*%0A%0A👤 নাম: ${name}%0A📞 ফোন: ${phone}%0A📍 ঠিকানা: ${address}%0A🚚 ডেলিভারি: ${deliveryArea === "inside" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}%0A📦 পরিমাণ: ${quantity} পিস%0A💰 মোট: ৳${total}`;
     window.open(`https://wa.me/+8801898883577?text=${message}`, "_blank");
+
+    setOrderPlaced(true);
+    setSubmitting(false);
+    toast({ title: "✅ অর্ডার সফলভাবে সম্পন্ন হয়েছে!" });
   };
 
   const benefits = [
@@ -31,6 +61,22 @@ const CheckoutSection = () => {
     "ফ্রি বাবল সলিউশন (৪ বোতল)",
     "১০০% অরিজিনাল প্রডাক্ট",
   ];
+
+  if (orderPlaced) {
+    return (
+      <div className="bg-card rounded-3xl border border-border p-8 shadow-lg text-center">
+        <div className="text-6xl mb-4">🎉</div>
+        <h3 className="text-2xl font-bold text-foreground mb-2">অর্ডার সফল হয়েছে!</h3>
+        <p className="text-muted-foreground mb-6">আমরা শীঘ্রই আপনার সাথে যোগাযোগ করবো। ধন্যবাদ!</p>
+        <button
+          onClick={() => { setOrderPlaced(false); setName(""); setPhone(""); setAddress(""); setQuantity(1); }}
+          className="bg-primary text-primary-foreground px-6 py-3 rounded-xl font-semibold"
+        >
+          আরেকটি অর্ডার করুন
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card rounded-3xl border border-border p-6 md:p-8 shadow-lg">
@@ -152,11 +198,12 @@ const CheckoutSection = () => {
       {/* CTA */}
       <motion.button
         onClick={handleOrder}
-        className="w-full bg-cta-gradient text-secondary-foreground py-4 rounded-2xl text-lg font-bold shadow-warm"
+        disabled={submitting}
+        className="w-full bg-cta-gradient text-secondary-foreground py-4 rounded-2xl text-lg font-bold shadow-warm disabled:opacity-50"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
       >
-        🛒 অর্ডার কনফার্ম করুন
+        {submitting ? "⏳ অর্ডার হচ্ছে..." : "🛒 অর্ডার কনফার্ম করুন"}
       </motion.button>
 
       {/* Benefits */}

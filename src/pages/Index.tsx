@@ -4,8 +4,10 @@ import ReviewSlider from "@/components/ReviewSlider";
 import ProductGallery from "@/components/ProductGallery";
 import CheckoutSection from "@/components/CheckoutSection";
 import ProductListSection from "@/components/ProductListSection";
+import { useFacebookPixel } from "@/hooks/useFacebookPixel";
 
 const Index = () => {
+  useFacebookPixel();
   return (
     <main className="min-h-screen">
       <HeroSection />

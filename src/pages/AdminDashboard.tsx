@@ -386,7 +386,60 @@ const AdminDashboard = () => {
               </div>
             )}
           </>
-        )}
+        ) : activeTab === "settings" ? (
+          /* Settings Tab */
+          <div className="max-w-xl">
+            <h2 className="text-xl font-bold text-foreground mb-1">ফেসবুক পিক্সেল ও কনভার্সন API</h2>
+            <p className="text-sm text-muted-foreground mb-6">পিক্সেল আইডি ও টোকেন দিলে অটোমেটিক কাজ করবে</p>
+
+            {settingsLoading ? (
+              <div className="text-muted-foreground py-10 text-center">লোড হচ্ছে...</div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">Facebook Pixel ID</label>
+                  <input
+                    type="text"
+                    value={fbPixelId}
+                    onChange={(e) => setFbPixelId(e.target.value)}
+                    placeholder="যেমন: 123456789012345"
+                    className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Facebook Events Manager থেকে পাবেন</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">Conversion API Token</label>
+                  <input
+                    type="password"
+                    value={fbCapiToken}
+                    onChange={(e) => setFbCapiToken(e.target.value)}
+                    placeholder="আপনার CAPI অ্যাক্সেস টোকেন"
+                    className="w-full px-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Events Manager → Settings → Generate Access Token</p>
+                </div>
+                <button
+                  onClick={handleSaveSettings}
+                  disabled={settingsSaving}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  {settingsSaving ? "সেভ হচ্ছে..." : "সেভ করুন"}
+                </button>
+
+                <div className="bg-muted/50 rounded-xl p-4 mt-4">
+                  <h4 className="text-sm font-medium text-foreground mb-2">📋 যেভাবে কাজ করবে:</h4>
+                  <ul className="text-xs text-muted-foreground space-y-1.5">
+                    <li>• Pixel ID দিলে সাইটে অটো PageView ট্র্যাক হবে</li>
+                    <li>• CAPI Token দিলে সার্ভার থেকে Purchase ইভেন্ট যাবে</li>
+                    <li>• অর্ডার করলে ব্রাউজার + সার্ভার দুইদিক থেকে ইভেন্ট পাঠাবে</li>
+                    <li>• দুটোই দিলে Facebook Ads অপটিমাইজেশন সবচেয়ে ভালো হবে</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* Order Detail Modal */}

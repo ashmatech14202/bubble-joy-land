@@ -432,6 +432,10 @@ const AdminDashboard = () => {
                           className="flex-1 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors inline-flex items-center justify-center gap-1">
                           <Eye className="w-3.5 h-3.5" />দেখুন
                         </button>
+                        <button onClick={() => { setEditingProduct({ ...product }); setEditProductImagePreview(product.image_url); setEditProductImage(null); }}
+                          className="flex-1 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors inline-flex items-center justify-center gap-1">
+                          <Pencil className="w-3.5 h-3.5" />এডিট
+                        </button>
                         <button onClick={() => handleToggleActive(product)}
                           className={`flex-1 py-2 rounded-lg text-sm transition-colors inline-flex items-center justify-center gap-1 ${
                             product.is_active ? "text-muted-foreground hover:text-foreground hover:bg-muted" : "text-primary hover:bg-primary/10"

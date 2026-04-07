@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Check, Phone, Minus, Plus, MapPin, User, Truck, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { trackFBEvent, sendServerEvent } from "@/hooks/useFacebookPixel";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];
@@ -71,6 +72,23 @@ const CheckoutSection = () => {
       setSubmitting(false);
       return;
     }
+
+    // Track Purchase event — browser pixel
+    trackFBEvent("Purchase", {
+      value: total,
+      currency: "BDT",
+      content_name: selectedProduct.name,
+    });
+
+    // Track Purchase event — server CAPI
+    sendServerEvent({
+      event_name: "Purchase",
+      customer_name: name,
+      phone,
+      value: total,
+      currency: "BDT",
+      content_name: selectedProduct.name,
+    });
 
     setOrderPlaced(true);
     setSubmitting(false);

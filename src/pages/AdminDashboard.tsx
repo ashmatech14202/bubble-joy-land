@@ -317,7 +317,7 @@ const AdminDashboard = () => {
               </div>
             )}
           </>
-        ) : (
+        ) : activeTab === "products" ? (
           /* Products Tab */
           <>
             <div className="flex items-center justify-between mb-6">

@@ -7,7 +7,6 @@ import CheckoutSection from "@/components/CheckoutSection";
 import ProductListSection from "@/components/ProductListSection";
 import { useFacebookPixel } from "@/hooks/useFacebookPixel";
 import { supabase } from "@/integrations/supabase/client";
-import { ShoppingCart } from "lucide-react";
 
 const Index = () => {
   useFacebookPixel();

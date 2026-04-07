@@ -39,7 +39,11 @@ const nextStatuses: Record<OrderStatus, OrderStatus[]> = {
 };
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState<"orders" | "products">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "products" | "settings">("orders");
+  const [fbPixelId, setFbPixelId] = useState("");
+  const [fbCapiToken, setFbCapiToken] = useState("");
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Check, Phone, Minus, Plus, MapPin, User, Truck } from "lucide-react";
+import { Check, Phone, Minus, Plus, MapPin, User, Truck, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
+
+type Product = Database["public"]["Tables"]["products"]["Row"];
 
 const CheckoutSection = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -12,9 +17,26 @@ const CheckoutSection = () => {
   const [deliveryArea, setDeliveryArea] = useState<"inside" | "outside">("outside");
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
   const { toast } = useToast();
 
-  const unitPrice = 990;
+  useEffect(() => {
+    const fetchProducts = async () => {
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .gt("stock", 0)
+        .order("created_at", { ascending: false });
+      const list = data || [];
+      setProducts(list);
+      if (list.length > 0) setSelectedProduct(list[0]);
+      setLoadingProducts(false);
+    };
+    fetchProducts();
+  }, []);
+
+  const unitPrice = selectedProduct?.price || 0;
   const deliveryCharge = deliveryArea === "inside" ? 60 : 120;
   const subtotal = unitPrice * quantity;
   const total = subtotal + deliveryCharge;
@@ -24,10 +46,13 @@ const CheckoutSection = () => {
       toast({ title: "সকল তথ্য পূরণ করুন", variant: "destructive" });
       return;
     }
+    if (!selectedProduct) {
+      toast({ title: "একটি প্রোডাক্ট সিলেক্ট করুন", variant: "destructive" });
+      return;
+    }
 
     setSubmitting(true);
 
-    // Save to database
     const { error } = await supabase.from("orders").insert({
       customer_name: name,
       phone,
@@ -37,6 +62,7 @@ const CheckoutSection = () => {
       unit_price: unitPrice,
       delivery_charge: deliveryCharge,
       total,
+      notes: `প্রোডাক্ট: ${selectedProduct.name}`,
     });
 
     if (error) {
@@ -46,7 +72,6 @@ const CheckoutSection = () => {
       return;
     }
 
-
     setOrderPlaced(true);
     setSubmitting(false);
     toast({ title: "✅ অর্ডার সফলভাবে সম্পন্ন হয়েছে!" });
@@ -55,7 +80,6 @@ const CheckoutSection = () => {
   const benefits = [
     "ক্যাশ অন ডেলিভারি",
     "প্রডাক্ট দেখে নেওয়ার সুযোগ",
-    "ফ্রি বাবল সলিউশন (২ বোতল)",
     "১০০% অরিজিনাল প্রডাক্ট",
   ];
 
@@ -80,12 +104,54 @@ const CheckoutSection = () => {
       <h3 className="text-2xl font-bold text-foreground mb-2">অর্ডার করুন 🎈</h3>
       <p className="text-muted-foreground text-sm mb-6">ক্যাশ অন ডেলিভারি — পণ্য হাতে পেয়ে টাকা দিন</p>
 
+      {/* Product Selector */}
+      {loadingProducts ? (
+        <div className="text-sm text-muted-foreground mb-6">প্রোডাক্ট লোড হচ্ছে...</div>
+      ) : products.length === 0 ? (
+        <div className="text-sm text-muted-foreground mb-6 bg-muted/50 rounded-xl p-4 text-center">
+          <ShoppingBag className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" />
+          কোনো প্রোডাক্ট নেই
+        </div>
+      ) : (
+        <div className="mb-6">
+          <label className="text-sm font-medium text-foreground mb-2 block">প্রোডাক্ট সিলেক্ট করুন</label>
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            {products.map((product) => (
+              <button
+                key={product.id}
+                onClick={() => { setSelectedProduct(product); setQuantity(1); }}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${
+                  selectedProduct?.id === product.id
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "border-border hover:border-primary/50"
+                }`}
+              >
+                <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ShoppingBag className="w-5 h-5 text-muted-foreground/30" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-foreground text-sm truncate">{product.name}</div>
+                  <div className="text-xs text-muted-foreground">স্টক: {product.stock} পিস</div>
+                </div>
+                <div className="font-bold text-foreground text-sm whitespace-nowrap">৳{product.price}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Price */}
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-4xl font-bold text-foreground">৳{unitPrice}</span>
-        <span className="text-muted-foreground line-through text-lg">৳১,৩৫০</span>
-        <span className="bg-destructive text-destructive-foreground text-xs font-bold px-2.5 py-1 rounded-full">-২৭%</span>
-      </div>
+      {selectedProduct && (
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-4xl font-bold text-foreground">৳{unitPrice}</span>
+        </div>
+      )}
 
       {/* Quantity */}
       <div className="mb-5">
@@ -99,7 +165,7 @@ const CheckoutSection = () => {
           </button>
           <span className="text-xl font-bold w-10 text-center">{quantity}</span>
           <button
-            onClick={() => setQuantity(quantity + 1)}
+            onClick={() => setQuantity(Math.min(selectedProduct?.stock || 99, quantity + 1))}
             className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-muted transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -178,6 +244,12 @@ const CheckoutSection = () => {
 
       {/* Total */}
       <div className="bg-muted/50 rounded-xl p-4 mb-6 space-y-2 text-sm">
+        {selectedProduct && (
+          <div className="flex justify-between text-muted-foreground">
+            <span className="truncate mr-2">{selectedProduct.name}</span>
+            <span>৳{unitPrice}</span>
+          </div>
+        )}
         <div className="flex justify-between text-muted-foreground">
           <span>মূল্য ({quantity} পিস)</span>
           <span>৳{subtotal}</span>
@@ -195,7 +267,7 @@ const CheckoutSection = () => {
       {/* CTA */}
       <motion.button
         onClick={handleOrder}
-        disabled={submitting}
+        disabled={submitting || !selectedProduct}
         className="w-full bg-cta-gradient text-secondary-foreground py-4 rounded-2xl text-lg font-bold shadow-warm disabled:opacity-50"
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}

@@ -805,6 +805,83 @@ const AdminDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Edit Product Modal */}
+      <AnimatePresence>
+        {editingProduct && (
+          <motion.div className="fixed inset-0 bg-foreground/50 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => { setEditingProduct(null); setEditProductImage(null); setEditProductImagePreview(null); }}>
+            <motion.div className="bg-card rounded-2xl border border-border p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">প্রোডাক্ট এডিট</h2>
+                <button onClick={() => { setEditingProduct(null); setEditProductImage(null); setEditProductImagePreview(null); }} className="p-1 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="space-y-3">
+                <EditField label="প্রোডাক্টের নাম *" value={editingProduct.name}
+                  onChange={(v) => setEditingProduct({ ...editingProduct, name: v })} />
+                <EditField label="বর্ণনা" value={editingProduct.description || ""}
+                  onChange={(v) => setEditingProduct({ ...editingProduct, description: v || null })} textarea />
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">মূল্য (৳) *</label>
+                  <input type="number" min={0} value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: Math.max(0, parseInt(e.target.value) || 0) })}
+                    className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">প্রোডাক্টের ছবি</label>
+                  {(editProductImagePreview || editingProduct.image_url) && (
+                    <div className="relative rounded-xl overflow-hidden bg-muted mb-2">
+                      <img src={editProductImagePreview || editingProduct.image_url || ""} alt="Preview" className="w-full h-40 object-cover" />
+                      <button onClick={() => { setEditProductImagePreview(null); setEditProductImage(null); setEditingProduct({ ...editingProduct, image_url: null }); }}
+                        className="absolute top-2 right-2 p-1 rounded-full bg-foreground/60 text-background hover:bg-foreground/80">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  <label className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-border text-sm cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-all ${uploadingImage ? "opacity-50 pointer-events-none" : ""}`}>
+                    <input type="file" accept="image/*" className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) {
+                          setEditProductImage(f);
+                          setEditProductImagePreview(URL.createObjectURL(f));
+                        }
+                      }} />
+                    <Upload className="w-4 h-4 text-muted-foreground" /><span className="text-muted-foreground">নতুন ছবি আপলোড করুন</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">স্টক</label>
+                  <input type="number" min={0} value={editingProduct.stock}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, stock: Math.max(0, parseInt(e.target.value) || 0) })}
+                    className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setEditingProduct({ ...editingProduct, is_active: !editingProduct.is_active })}
+                    className={`w-10 h-6 rounded-full transition-colors ${editingProduct.is_active ? "bg-primary" : "bg-muted"}`}>
+                    <div className={`w-4 h-4 rounded-full bg-card shadow transition-transform mx-1 ${editingProduct.is_active ? "translate-x-4" : ""}`} />
+                  </button>
+                  <span className="text-sm text-foreground">{editingProduct.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}</span>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => { setEditingProduct(null); setEditProductImage(null); setEditProductImagePreview(null); }}
+                    className="flex-1 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors">
+                    বাতিল
+                  </button>
+                  <button onClick={handleEditProductSave}
+                    disabled={uploadingImage}
+                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
+                    {uploadingImage ? "আপলোড হচ্ছে..." : "সেভ করুন"}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

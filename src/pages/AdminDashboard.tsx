@@ -91,8 +91,19 @@ const AdminDashboard = () => {
 
   const handleSaveSettings = async () => {
     setSettingsSaving(true);
-    await supabase.from("site_settings").update({ value: fbPixelId }).eq("key", "fb_pixel_id");
-    await supabase.from("site_settings").update({ value: fbCapiToken }).eq("key", "fb_capi_token");
+    const upsertKeys = [
+      { key: "fb_pixel_id", value: fbPixelId },
+      { key: "fb_capi_token", value: fbCapiToken },
+      { key: "copyright_text", value: copyrightText },
+    ];
+    for (const item of upsertKeys) {
+      const { data: existing } = await supabase.from("site_settings").select("id").eq("key", item.key).maybeSingle();
+      if (existing) {
+        await supabase.from("site_settings").update({ value: item.value }).eq("key", item.key);
+      } else {
+        await supabase.from("site_settings").insert(item);
+      }
+    }
     setSettingsSaving(false);
     toast({ title: "সেটিংস সেভ হয়েছে ✅" });
   };

@@ -47,14 +47,7 @@ const Index = () => {
         </p>
       </footer>
 
-      {/* Sticky Order Button */}
-      <a
-        href="#order"
-        className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 inline-flex items-center gap-2.5 px-8 py-4 rounded-full bg-secondary text-secondary-foreground font-bold text-base shadow-[0_8px_30px_-4px_hsl(var(--secondary)/0.5)] hover:shadow-[0_12px_40px_-4px_hsl(var(--secondary)/0.6)] hover:scale-105 transition-all duration-300"
-      >
-        <ShoppingCart className="w-5 h-5" />
-        এখনই অর্ডার করুন — ৳৯৯০
-      </a>
+
     </main>
   );
 };

@@ -87,6 +87,12 @@ const ProductListSection = () => {
             </motion.div>
           ))}
         </div>
+
+        <div className="text-center mt-10">
+          <a href="#order" className="inline-flex items-center gap-2 px-8 py-3 rounded-full bg-primary text-primary-foreground text-lg font-bold hover:opacity-90 transition-opacity shadow-lg">
+            🛒 এখনই অর্ডার করুন
+          </a>
+        </div>
       </div>
     </section>
   );

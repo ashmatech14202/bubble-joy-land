@@ -193,6 +193,7 @@ const AdminDashboard = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
+  const [searchPhone, setSearchPhone] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -450,7 +451,8 @@ const AdminDashboard = () => {
     printContent(generateBulkSlipsHtml(selected));
   };
 
-  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+  const filtered = (filter === "all" ? orders : orders.filter((o) => o.status === filter))
+    .filter((o) => searchPhone.trim() === "" || o.phone.includes(searchPhone.trim()));
 
   const stats = {
     total: orders.length,
@@ -535,6 +537,17 @@ const AdminDashboard = () => {
                   <Printer className="w-4 h-4" />{selectedOrderIds.size}টি স্লিপ প্রিন্ট
                 </button>
               )}
+            </div>
+
+            {/* Phone Search */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="📞 ফোন নম্বর দিয়ে সার্চ করুন..."
+                value={searchPhone}
+                onChange={(e) => setSearchPhone(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
             </div>
 
             {/* Filters */}

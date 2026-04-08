@@ -573,12 +573,16 @@ const AdminDashboard = () => {
                 </div>
                 {nextStatuses[selectedOrder.status].length > 0 && (
                   <div className="flex gap-2 flex-wrap pt-2 border-t border-border">
-                    {nextStatuses[selectedOrder.status].map((ns) => (
-                      <button key={ns} onClick={() => updateStatus(selectedOrder.id, ns)}
-                        className={`text-sm px-4 py-2 rounded-xl ${statusConfig[ns].color} hover:opacity-80 transition-opacity`}>
-                        {statusConfig[ns].label} করুন
-                      </button>
-                    ))}
+                    <select
+                      value={selectedOrder.status}
+                      onChange={(e) => updateStatus(selectedOrder.id, e.target.value as OrderStatus)}
+                      className="text-sm px-4 py-2 rounded-xl bg-card border border-border text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value={selectedOrder.status}>{statusConfig[selectedOrder.status].label}</option>
+                      {nextStatuses[selectedOrder.status].map((ns) => (
+                        <option key={ns} value={ns}>{statusConfig[ns].label} করুন</option>
+                      ))}
+                    </select>
                   </div>
                 )}
                 <div className="flex gap-2 pt-2">

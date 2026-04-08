@@ -592,7 +592,7 @@ const AdminDashboard = () => {
                             {isSelected ? <CheckSquare className="w-5 h-5 text-primary" /> : <Square className="w-5 h-5 text-muted-foreground" />}
                           </button>
                           <span className="font-bold text-foreground">{order.customer_name}</span>
-                          <span className="text-muted-foreground text-sm">{order.phone}</span>
+                          <a href={`tel:${order.phone}`} className="text-primary text-sm hover:underline">{order.phone}</a>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>

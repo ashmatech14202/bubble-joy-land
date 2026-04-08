@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,6 +6,7 @@ import {
   LogOut, Package, Clock, Truck, CheckCircle, XCircle, RefreshCw,
   Eye, Pencil, Trash2, X, RotateCcw, CreditCard, Send, ArrowRight,
   Plus, ShoppingBag, BoxIcon, Settings, Save, Upload, Image,
+  Printer, FileText, CheckSquare, Square,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +39,149 @@ const nextStatuses: Record<OrderStatus, OrderStatus[]> = {
   cancelled: [],
 };
 
+// --- Print helpers ---
+const printContent = (html: string) => {
+  const win = window.open("", "_blank", "width=800,height=600");
+  if (!win) return;
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  win.print();
+};
+
+const generateCourierSlipHtml = (order: Order) => `
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  .slip { border: 2px solid #000; padding: 20px; max-width: 400px; margin: 0 auto; }
+  .slip-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+  .slip-header h2 { font-size: 20px; margin-bottom: 4px; }
+  .slip-header p { font-size: 12px; color: #666; }
+  .slip-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
+  .slip-row .label { font-weight: bold; color: #333; }
+  .slip-row .value { text-align: right; max-width: 60%; }
+  .slip-section { border-top: 1px dashed #ccc; margin-top: 10px; padding-top: 10px; }
+  .slip-total { border-top: 2px solid #000; margin-top: 15px; padding-top: 10px; font-size: 18px; font-weight: bold; text-align: center; }
+  .slip-barcode { text-align: center; margin-top: 15px; font-family: monospace; font-size: 12px; letter-spacing: 2px; }
+  @media print { body { padding: 0; } .slip { border: 2px solid #000; } }
+</style></head><body>
+<div class="slip">
+  <div class="slip-header">
+    <h2>🎈 বাবল গান</h2>
+    <p>কুরিয়ার স্লিপ</p>
+  </div>
+  <div class="slip-row"><span class="label">অর্ডার ID:</span><span class="value">${order.id.slice(0, 8).toUpperCase()}</span></div>
+  <div class="slip-row"><span class="label">তারিখ:</span><span class="value">${new Date(order.created_at).toLocaleDateString("bn-BD")}</span></div>
+  <div class="slip-section">
+    <div class="slip-row"><span class="label">নাম:</span><span class="value">${order.customer_name}</span></div>
+    <div class="slip-row"><span class="label">ফোন:</span><span class="value">${order.phone}</span></div>
+    <div class="slip-row"><span class="label">ঠিকানা:</span><span class="value">${order.address}</span></div>
+    <div class="slip-row"><span class="label">এরিয়া:</span><span class="value">${order.delivery_area === "inside_dhaka" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}</span></div>
+  </div>
+  <div class="slip-section">
+    <div class="slip-row"><span class="label">পরিমাণ:</span><span class="value">${order.quantity} পিস</span></div>
+    <div class="slip-row"><span class="label">ডেলিভারি চার্জ:</span><span class="value">৳${order.delivery_charge}</span></div>
+  </div>
+  <div class="slip-total">COD: ৳${order.total}</div>
+  <div class="slip-barcode">${order.id.slice(0, 12).toUpperCase()}</div>
+</div>
+</body></html>`;
+
+const generateInvoiceHtml = (order: Order) => `
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; padding: 30px; max-width: 700px; margin: 0 auto; }
+  .inv-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #333; padding-bottom: 15px; margin-bottom: 20px; }
+  .inv-header h1 { font-size: 28px; }
+  .inv-header .meta { text-align: right; font-size: 13px; color: #555; }
+  .inv-header .meta p { margin: 2px 0; }
+  .inv-section { margin-bottom: 20px; }
+  .inv-section h3 { font-size: 14px; color: #888; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .inv-info { font-size: 14px; line-height: 1.8; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th { background: #f5f5f5; text-align: left; padding: 10px; font-size: 13px; border-bottom: 2px solid #ddd; }
+  td { padding: 10px; font-size: 14px; border-bottom: 1px solid #eee; }
+  .text-right { text-align: right; }
+  .total-row td { font-weight: bold; font-size: 16px; border-top: 2px solid #333; border-bottom: none; }
+  .inv-footer { margin-top: 30px; text-align: center; font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 15px; }
+  .status-badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #e0f7e0; color: #2e7d32; }
+  @media print { body { padding: 15px; } }
+</style></head><body>
+<div class="inv-header">
+  <div>
+    <h1>🎈 বাবল গান</h1>
+    <p style="color:#888; font-size:13px;">ইনভয়েস</p>
+  </div>
+  <div class="meta">
+    <p><strong>ইনভয়েস #:</strong> INV-${order.id.slice(0, 8).toUpperCase()}</p>
+    <p><strong>তারিখ:</strong> ${new Date(order.created_at).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric" })}</p>
+    <p><span class="status-badge">${statusConfig[order.status].label}</span></p>
+  </div>
+</div>
+<div class="inv-section">
+  <h3>কাস্টমার তথ্য</h3>
+  <div class="inv-info">
+    <strong>${order.customer_name}</strong><br/>
+    ফোন: ${order.phone}<br/>
+    ঠিকানা: ${order.address}<br/>
+    এরিয়া: ${order.delivery_area === "inside_dhaka" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}
+  </div>
+</div>
+${order.notes ? `<div class="inv-section"><h3>নোট</h3><div class="inv-info">${order.notes}</div></div>` : ""}
+<table>
+  <thead><tr><th>বিবরণ</th><th class="text-right">পরিমাণ</th><th class="text-right">একক মূল্য</th><th class="text-right">মোট</th></tr></thead>
+  <tbody>
+    <tr><td>বাবল গান</td><td class="text-right">${order.quantity}</td><td class="text-right">৳${order.unit_price}</td><td class="text-right">৳${order.unit_price * order.quantity}</td></tr>
+    <tr><td>ডেলিভারি চার্জ</td><td class="text-right">—</td><td class="text-right">—</td><td class="text-right">৳${order.delivery_charge}</td></tr>
+    <tr class="total-row"><td colspan="3">সর্বমোট</td><td class="text-right">৳${order.total}</td></tr>
+  </tbody>
+</table>
+<div class="inv-footer">ধন্যবাদ আপনার অর্ডারের জন্য! 🎉</div>
+</body></html>`;
+
+const generateBulkSlipsHtml = (orders: Order[]) => `
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; }
+  .slip { border: 2px solid #000; padding: 20px; max-width: 400px; margin: 20px auto; page-break-after: always; }
+  .slip:last-child { page-break-after: auto; }
+  .slip-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; }
+  .slip-header h2 { font-size: 20px; margin-bottom: 4px; }
+  .slip-header p { font-size: 12px; color: #666; }
+  .slip-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
+  .slip-row .label { font-weight: bold; color: #333; }
+  .slip-row .value { text-align: right; max-width: 60%; }
+  .slip-section { border-top: 1px dashed #ccc; margin-top: 10px; padding-top: 10px; }
+  .slip-total { border-top: 2px solid #000; margin-top: 15px; padding-top: 10px; font-size: 18px; font-weight: bold; text-align: center; }
+  .slip-barcode { text-align: center; margin-top: 15px; font-family: monospace; font-size: 12px; letter-spacing: 2px; }
+  @media print { body { padding: 0; } }
+</style></head><body>
+${orders.map(order => `
+<div class="slip">
+  <div class="slip-header">
+    <h2>🎈 বাবল গান</h2>
+    <p>কুরিয়ার স্লিপ</p>
+  </div>
+  <div class="slip-row"><span class="label">অর্ডার ID:</span><span class="value">${order.id.slice(0, 8).toUpperCase()}</span></div>
+  <div class="slip-row"><span class="label">তারিখ:</span><span class="value">${new Date(order.created_at).toLocaleDateString("bn-BD")}</span></div>
+  <div class="slip-section">
+    <div class="slip-row"><span class="label">নাম:</span><span class="value">${order.customer_name}</span></div>
+    <div class="slip-row"><span class="label">ফোন:</span><span class="value">${order.phone}</span></div>
+    <div class="slip-row"><span class="label">ঠিকানা:</span><span class="value">${order.address}</span></div>
+    <div class="slip-row"><span class="label">এরিয়া:</span><span class="value">${order.delivery_area === "inside_dhaka" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"}</span></div>
+  </div>
+  <div class="slip-section">
+    <div class="slip-row"><span class="label">পরিমাণ:</span><span class="value">${order.quantity} পিস</span></div>
+    <div class="slip-row"><span class="label">ডেলিভারি চার্জ:</span><span class="value">৳${order.delivery_charge}</span></div>
+  </div>
+  <div class="slip-total">COD: ৳${order.total}</div>
+  <div class="slip-barcode">${order.id.slice(0, 12).toUpperCase()}</div>
+</div>`).join("")}
+</body></html>`;
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState<"orders" | "products" | "settings">("orders");
   const [fbPixelId, setFbPixelId] = useState("");
@@ -61,6 +205,12 @@ const AdminDashboard = () => {
   const [newProduct, setNewProduct] = useState({ name: "", description: "", price: 0, image_url: "", stock: 0, is_active: true });
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<Set<string>>(new Set());
+  const [showAddOrder, setShowAddOrder] = useState(false);
+  const [newOrder, setNewOrder] = useState({
+    customer_name: "", phone: "", address: "", delivery_area: "outside_dhaka" as "inside_dhaka" | "outside_dhaka",
+    quantity: 1, unit_price: 990, notes: "",
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -143,6 +293,34 @@ const AdminDashboard = () => {
     setOrders((prev) => prev.map((o) => o.id === id ? { ...o, customer_name, phone, address, delivery_area, quantity, delivery_charge: deliveryCharge, total, notes } : o));
     setEditingOrder(null);
     toast({ title: "অর্ডার আপডেট হয়েছে" });
+  };
+
+  const handleAddOrder = async () => {
+    if (!newOrder.customer_name || !newOrder.phone || !newOrder.address) {
+      toast({ title: "নাম, ফোন ও ঠিকানা দিন", variant: "destructive" });
+      return;
+    }
+    const deliveryCharge = newOrder.delivery_area === "inside_dhaka" ? 60 : 120;
+    const total = newOrder.unit_price * newOrder.quantity + deliveryCharge;
+    const { data, error } = await supabase.from("orders").insert({
+      customer_name: newOrder.customer_name,
+      phone: newOrder.phone,
+      address: newOrder.address,
+      delivery_area: newOrder.delivery_area,
+      quantity: newOrder.quantity,
+      unit_price: newOrder.unit_price,
+      delivery_charge: deliveryCharge,
+      total,
+      notes: newOrder.notes || null,
+    }).select().single();
+    if (error) {
+      toast({ title: "অর্ডার যোগ করতে সমস্যা", variant: "destructive" });
+      return;
+    }
+    setOrders((prev) => [data, ...prev]);
+    setNewOrder({ customer_name: "", phone: "", address: "", delivery_area: "outside_dhaka", quantity: 1, unit_price: 990, notes: "" });
+    setShowAddOrder(false);
+    toast({ title: "অর্ডার যোগ হয়েছে ✅" });
   };
 
   const handleImageUpload = async (file: File) => {
@@ -246,6 +424,32 @@ const AdminDashboard = () => {
     navigate("/admin");
   };
 
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrderIds(prev => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedOrderIds.size === filtered.length) {
+      setSelectedOrderIds(new Set());
+    } else {
+      setSelectedOrderIds(new Set(filtered.map(o => o.id)));
+    }
+  };
+
+  const printBulkSlips = () => {
+    const selected = orders.filter(o => selectedOrderIds.has(o.id));
+    if (selected.length === 0) {
+      toast({ title: "অন্তত একটি অর্ডার সিলেক্ট করুন", variant: "destructive" });
+      return;
+    }
+    printContent(generateBulkSlipsHtml(selected));
+  };
+
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
   const stats = {
@@ -319,6 +523,20 @@ const AdminDashboard = () => {
               ))}
             </div>
 
+            {/* Action bar: Add Order + Bulk Print */}
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <button onClick={() => setShowAddOrder(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+                <Plus className="w-4 h-4" />অর্ডার যোগ করুন
+              </button>
+              {selectedOrderIds.size > 0 && (
+                <button onClick={printBulkSlips}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+                  <Printer className="w-4 h-4" />{selectedOrderIds.size}টি স্লিপ প্রিন্ট
+                </button>
+              )}
+            </div>
+
             {/* Filters */}
             <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
               {(["all", ...allStatuses] as const).map((f) => (
@@ -331,6 +549,16 @@ const AdminDashboard = () => {
               ))}
             </div>
 
+            {/* Select All checkbox */}
+            {filtered.length > 0 && (
+              <div className="flex items-center gap-2 mb-3">
+                <button onClick={toggleSelectAll} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {selectedOrderIds.size === filtered.length ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4" />}
+                  সব সিলেক্ট করুন
+                </button>
+              </div>
+            )}
+
             {/* Orders List */}
             {loading ? (
               <div className="text-center py-20 text-muted-foreground">লোড হচ্ছে...</div>
@@ -341,19 +569,28 @@ const AdminDashboard = () => {
                 {filtered.map((order) => {
                   const sc = statusConfig[order.status];
                   const StatusIcon = sc.icon;
-                  const next = nextStatuses[order.status];
+                  const isSelected = selectedOrderIds.has(order.id);
                   return (
-                    <motion.div key={order.id} className="bg-card rounded-xl border border-border p-4"
+                    <motion.div key={order.id} className={`bg-card rounded-xl border p-4 ${isSelected ? "border-primary" : "border-border"}`}
                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                         <div className="flex items-center gap-2">
+                          <button onClick={() => toggleOrderSelection(order.id)} className="flex-shrink-0">
+                            {isSelected ? <CheckSquare className="w-5 h-5 text-primary" /> : <Square className="w-5 h-5 text-muted-foreground" />}
+                          </button>
                           <span className="font-bold text-foreground">{order.customer_name}</span>
                           <span className="text-muted-foreground text-sm">{order.phone}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>
                             <StatusIcon className="w-3 h-3" />{sc.label}
                           </div>
+                          <button onClick={() => printContent(generateCourierSlipHtml(order))} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="কুরিয়ার স্লিপ">
+                            <Printer className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => printContent(generateInvoiceHtml(order))} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="ইনভয়েস">
+                            <FileText className="w-4 h-4" />
+                          </button>
                           <button onClick={() => setSelectedOrder(order)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="বিস্তারিত">
                             <Eye className="w-4 h-4" />
                           </button>
@@ -581,6 +818,17 @@ const AdminDashboard = () => {
                       ))}
                     </select>
                   </div>
+                {/* Print buttons in detail modal */}
+                <div className="flex gap-2 pt-2 border-t border-border">
+                  <button onClick={() => printContent(generateCourierSlipHtml(selectedOrder))}
+                    className="flex-1 py-2 rounded-xl bg-secondary/10 text-secondary text-sm font-medium hover:bg-secondary/20 transition-colors inline-flex items-center justify-center gap-1.5">
+                    <Printer className="w-4 h-4" />কুরিয়ার স্লিপ
+                  </button>
+                  <button onClick={() => printContent(generateInvoiceHtml(selectedOrder))}
+                    className="flex-1 py-2 rounded-xl bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20 transition-colors inline-flex items-center justify-center gap-1.5">
+                    <FileText className="w-4 h-4" />ইনভয়েস
+                  </button>
+                </div>
                 <div className="flex gap-2 pt-2">
                   <button onClick={() => { setEditingOrder({ ...selectedOrder }); }}
                     className="flex-1 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
@@ -649,6 +897,81 @@ const AdminDashboard = () => {
                   <button onClick={handleEditSave}
                     className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
                     সেভ করুন
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Order Modal */}
+      <AnimatePresence>
+        {showAddOrder && (
+          <motion.div className="fixed inset-0 bg-foreground/50 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setShowAddOrder(false)}>
+            <motion.div className="bg-card rounded-2xl border border-border p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-foreground">নতুন অর্ডার যোগ</h2>
+                <button onClick={() => setShowAddOrder(false)} className="p-1 rounded-lg hover:bg-muted"><X className="w-5 h-5" /></button>
+              </div>
+              <div className="space-y-3">
+                <EditField label="কাস্টমার নাম *" value={newOrder.customer_name}
+                  onChange={(v) => setNewOrder({ ...newOrder, customer_name: v })} />
+                <EditField label="ফোন *" value={newOrder.phone}
+                  onChange={(v) => setNewOrder({ ...newOrder, phone: v })} />
+                <EditField label="ঠিকানা *" value={newOrder.address}
+                  onChange={(v) => setNewOrder({ ...newOrder, address: v })} textarea />
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">ডেলিভারি এরিয়া</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["inside_dhaka", "outside_dhaka"] as const).map((area) => (
+                      <button key={area}
+                        onClick={() => setNewOrder({ ...newOrder, delivery_area: area })}
+                        className={`py-2 rounded-xl text-sm border transition-all ${
+                          newOrder.delivery_area === area
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground"
+                        }`}>
+                        {area === "inside_dhaka" ? "ঢাকার ভিতরে (৳60)" : "ঢাকার বাইরে (৳120)"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">একক মূল্য (৳)</label>
+                    <input type="number" min={0} value={newOrder.unit_price}
+                      onChange={(e) => setNewOrder({ ...newOrder, unit_price: Math.max(0, parseInt(e.target.value) || 0) })}
+                      className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground block mb-1">পরিমাণ</label>
+                    <input type="number" min={1} value={newOrder.quantity}
+                      onChange={(e) => setNewOrder({ ...newOrder, quantity: Math.max(1, parseInt(e.target.value) || 1) })}
+                      className="w-full px-3 py-2 rounded-xl border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  </div>
+                </div>
+                <div className="bg-muted/50 rounded-xl p-3 text-sm text-foreground">
+                  <div className="flex justify-between"><span>সাবটোটাল:</span><span>৳{newOrder.unit_price * newOrder.quantity}</span></div>
+                  <div className="flex justify-between"><span>ডেলিভারি:</span><span>৳{newOrder.delivery_area === "inside_dhaka" ? 60 : 120}</span></div>
+                  <div className="flex justify-between font-bold border-t border-border mt-1 pt-1">
+                    <span>মোট:</span><span>৳{newOrder.unit_price * newOrder.quantity + (newOrder.delivery_area === "inside_dhaka" ? 60 : 120)}</span>
+                  </div>
+                </div>
+                <EditField label="নোট (ঐচ্ছিক)" value={newOrder.notes}
+                  onChange={(v) => setNewOrder({ ...newOrder, notes: v })} textarea />
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => setShowAddOrder(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors">
+                    বাতিল
+                  </button>
+                  <button onClick={handleAddOrder}
+                    className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+                    অর্ডার যোগ করুন
                   </button>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Check, Phone, Minus, Plus, MapPin, User, Truck, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { trackFBEvent, sendServerEvent } from "@/hooks/useFacebookPixel";
+import { trackFBEvent, sendServerEvent, generateEventId } from "@/hooks/useFacebookPixel";
 import type { Database } from "@/integrations/supabase/types";
 
 type Product = Database["public"]["Tables"]["products"]["Row"];

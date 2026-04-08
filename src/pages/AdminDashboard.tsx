@@ -539,6 +539,17 @@ const AdminDashboard = () => {
               )}
             </div>
 
+            {/* Phone Search */}
+            <div className="mb-4">
+              <input
+                type="text"
+                placeholder="📞 ফোন নম্বর দিয়ে সার্চ করুন..."
+                value={searchPhone}
+                onChange={(e) => setSearchPhone(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+
             {/* Filters */}
             <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
               {(["all", ...allStatuses] as const).map((f) => (

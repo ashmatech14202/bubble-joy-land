@@ -376,14 +376,15 @@ const AdminDashboard = () => {
                           {new Date(order.created_at).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </span>
                         <div className="flex gap-1.5 flex-wrap">
-                          {next.map((ns) => {
-                            const nsc = statusConfig[ns];
-                            return (
-                              <button key={ns} onClick={() => updateStatus(order.id, ns)}
-                                className={`text-xs px-2.5 py-1.5 rounded-lg ${nsc.color} hover:opacity-80 transition-opacity inline-flex items-center gap-1`}>
-                                <ArrowRight className="w-3 h-3" />{nsc.label}
-                              </button>
-                            );
+                          <select
+                            value={order.status}
+                            onChange={(e) => updateStatus(order.id, e.target.value as OrderStatus)}
+                            className="text-xs px-2.5 py-1.5 rounded-lg bg-card border border-border text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
+                          >
+                            <option value={order.status}>{statusConfig[order.status].label}</option>
+                            {next.map((ns) => (
+                              <option key={ns} value={ns}>{statusConfig[ns].label}</option>
+                            ))}
                           })}
                         </div>
                       </div>

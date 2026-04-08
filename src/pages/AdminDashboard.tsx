@@ -385,7 +385,7 @@ const AdminDashboard = () => {
                             {next.map((ns) => (
                               <option key={ns} value={ns}>{statusConfig[ns].label}</option>
                             ))}
-                          })}
+                          </select>
                         </div>
                       </div>
                     </motion.div>

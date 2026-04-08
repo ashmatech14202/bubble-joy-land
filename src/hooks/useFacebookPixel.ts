@@ -63,6 +63,10 @@ export const trackFBEvent = (eventName: string, params?: Record<string, unknown>
   }
 };
 
+export const generateEventId = (eventName: string): string => {
+  return `${eventName}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+};
+
 export const sendServerEvent = async (eventData: {
   event_name: string;
   customer_name: string;
@@ -70,6 +74,7 @@ export const sendServerEvent = async (eventData: {
   value: number;
   currency?: string;
   content_name?: string;
+  event_id?: string;
 }) => {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;

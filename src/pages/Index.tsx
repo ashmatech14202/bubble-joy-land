@@ -26,11 +26,8 @@ const Index = () => {
   return (
     <main className="min-h-screen">
       <HeroSection />
-      <FeaturesSection />
-      <ProductListSection />
-      <ReviewSlider />
 
-      {/* Facebook Video Section */}
+      {/* Video Section */}
       <section className="py-16 bg-muted">
         <div className="container mx-auto px-4 max-w-3xl text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">🎬 ভিডিওতে দেখুন</h2>
@@ -48,6 +45,10 @@ const Index = () => {
           </a>
         </div>
       </section>
+
+      <FeaturesSection />
+      <ProductListSection />
+      <ReviewSlider />
 
       {/* Product + Checkout Section */}
       <section id="order" className="py-20 bg-background">

@@ -802,7 +802,7 @@ const AdminDashboard = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <DetailField label="কাস্টমার" value={selectedOrder.customer_name} />
-                  <DetailField label="ফোন" value={selectedOrder.phone} />
+                  <div className="bg-muted/50 rounded-lg p-2.5"><div className="text-[10px] text-muted-foreground mb-0.5">ফোন</div><a href={`tel:${selectedOrder.phone}`} className="text-sm font-medium text-primary hover:underline">{selectedOrder.phone}</a></div>
                   <DetailField label="ঠিকানা" value={selectedOrder.address} />
                   <DetailField label="ডেলিভারি এরিয়া" value={selectedOrder.delivery_area === "inside_dhaka" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"} />
                   <DetailField label="পরিমাণ" value={`${selectedOrder.quantity} পিস`} />

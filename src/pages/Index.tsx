@@ -36,7 +36,7 @@ const Index = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-8">🎬 ভিডিওতে দেখুন</h2>
           <div className="relative w-full rounded-2xl overflow-hidden shadow-lg" style={{ paddingBottom: '56.25%' }}>
             <iframe
-              src="https://www.youtube.com/embed/SohqxZ22mGA?autoplay=1&mute=1&loop=1&playlist=SohqxZ22mGA"
+              src="https://www.youtube.com/embed/SohqxZ22mGA?autoplay=1&mute=0&loop=1&playlist=SohqxZ22mGA"
               className="absolute inset-0 w-full h-full border-0"
               allowFullScreen
               allow="autoplay; encrypted-media"

@@ -381,9 +381,8 @@ const AdminDashboard = () => {
                             onChange={(e) => updateStatus(order.id, e.target.value as OrderStatus)}
                             className="text-xs px-2.5 py-1.5 rounded-lg bg-card border border-border text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
                           >
-                            <option value={order.status}>{statusConfig[order.status].label}</option>
-                            {next.map((ns) => (
-                              <option key={ns} value={ns}>{statusConfig[ns].label}</option>
+                            {allStatuses.map((s) => (
+                              <option key={s} value={s}>{statusConfig[s].label}</option>
                             ))}
                           </select>
                         </div>

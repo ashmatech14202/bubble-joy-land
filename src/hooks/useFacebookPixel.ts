@@ -53,9 +53,13 @@ export const useFacebookPixel = () => {
   return pixelId;
 };
 
-export const trackFBEvent = (eventName: string, params?: Record<string, unknown>) => {
+export const trackFBEvent = (eventName: string, params?: Record<string, unknown>, eventId?: string) => {
   if (typeof window !== "undefined" && (window as any).fbq) {
-    (window as any).fbq("track", eventName, params);
+    if (eventId) {
+      (window as any).fbq("track", eventName, params, { eventID: eventId });
+    } else {
+      (window as any).fbq("track", eventName, params);
+    }
   }
 };
 

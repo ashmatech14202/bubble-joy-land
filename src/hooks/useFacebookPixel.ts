@@ -53,10 +53,18 @@ export const useFacebookPixel = () => {
   return pixelId;
 };
 
-export const trackFBEvent = (eventName: string, params?: Record<string, unknown>) => {
+export const trackFBEvent = (eventName: string, params?: Record<string, unknown>, eventId?: string) => {
   if (typeof window !== "undefined" && (window as any).fbq) {
-    (window as any).fbq("track", eventName, params);
+    if (eventId) {
+      (window as any).fbq("track", eventName, params, { eventID: eventId });
+    } else {
+      (window as any).fbq("track", eventName, params);
+    }
   }
+};
+
+export const generateEventId = (eventName: string): string => {
+  return `${eventName}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 };
 
 export const sendServerEvent = async (eventData: {
@@ -66,6 +74,7 @@ export const sendServerEvent = async (eventData: {
   value: number;
   currency?: string;
   content_name?: string;
+  event_id?: string;
 }) => {
   try {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;

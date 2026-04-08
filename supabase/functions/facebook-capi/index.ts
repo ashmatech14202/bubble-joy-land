@@ -39,6 +39,7 @@ serve(async (req) => {
       source_url,
       fbc,
       fbp,
+      event_id: clientEventId,
     } = body;
 
     if (!event_name) {
@@ -67,7 +68,7 @@ serve(async (req) => {
       : undefined;
 
     const eventTime = Math.floor(Date.now() / 1000);
-    const eventId = `${event_name}_${eventTime}_${crypto.randomUUID().slice(0, 8)}`;
+    const eventId = clientEventId || `${event_name}_${eventTime}_${crypto.randomUUID().slice(0, 8)}`;
 
     const payload = {
       data: [

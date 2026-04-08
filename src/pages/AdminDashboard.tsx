@@ -592,7 +592,7 @@ const AdminDashboard = () => {
                             {isSelected ? <CheckSquare className="w-5 h-5 text-primary" /> : <Square className="w-5 h-5 text-muted-foreground" />}
                           </button>
                           <span className="font-bold text-foreground">{order.customer_name}</span>
-                          <span className="text-muted-foreground text-sm">{order.phone}</span>
+                          <a href={`tel:${order.phone}`} className="text-primary text-sm hover:underline">{order.phone}</a>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${sc.color}`}>
@@ -802,7 +802,7 @@ const AdminDashboard = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <DetailField label="কাস্টমার" value={selectedOrder.customer_name} />
-                  <DetailField label="ফোন" value={selectedOrder.phone} />
+                  <div className="bg-muted/50 rounded-lg p-2.5"><div className="text-[10px] text-muted-foreground mb-0.5">ফোন</div><a href={`tel:${selectedOrder.phone}`} className="text-sm font-medium text-primary hover:underline">{selectedOrder.phone}</a></div>
                   <DetailField label="ঠিকানা" value={selectedOrder.address} />
                   <DetailField label="ডেলিভারি এরিয়া" value={selectedOrder.delivery_area === "inside_dhaka" ? "ঢাকার ভিতরে" : "ঢাকার বাইরে"} />
                   <DetailField label="পরিমাণ" value={`${selectedOrder.quantity} পিস`} />

@@ -39,6 +39,7 @@ serve(async (req) => {
       source_url,
       fbc,
       fbp,
+      event_id: clientEventId,
     } = body;
 
     if (!event_name) {

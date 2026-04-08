@@ -570,20 +570,17 @@ const AdminDashboard = () => {
                 <div className="text-xs text-muted-foreground">
                   অর্ডার তারিখ: {new Date(selectedOrder.created_at).toLocaleDateString("bn-BD", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                 </div>
-                {nextStatuses[selectedOrder.status].length > 0 && (
-                  <div className="flex gap-2 flex-wrap pt-2 border-t border-border">
+                <div className="flex gap-2 flex-wrap pt-2 border-t border-border">
                     <select
                       value={selectedOrder.status}
                       onChange={(e) => updateStatus(selectedOrder.id, e.target.value as OrderStatus)}
                       className="text-sm px-4 py-2 rounded-xl bg-card border border-border text-foreground cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary"
                     >
-                      <option value={selectedOrder.status}>{statusConfig[selectedOrder.status].label}</option>
-                      {nextStatuses[selectedOrder.status].map((ns) => (
-                        <option key={ns} value={ns}>{statusConfig[ns].label} করুন</option>
+                      {allStatuses.map((s) => (
+                        <option key={s} value={s}>{statusConfig[s].label}</option>
                       ))}
                     </select>
                   </div>
-                )}
                 <div className="flex gap-2 pt-2">
                   <button onClick={() => { setEditingOrder({ ...selectedOrder }); }}
                     className="flex-1 py-2 rounded-xl bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">

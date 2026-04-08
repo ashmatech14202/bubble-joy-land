@@ -451,7 +451,8 @@ const AdminDashboard = () => {
     printContent(generateBulkSlipsHtml(selected));
   };
 
-  const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+  const filtered = (filter === "all" ? orders : orders.filter((o) => o.status === filter))
+    .filter((o) => searchPhone.trim() === "" || o.phone.includes(searchPhone.trim()));
 
   const stats = {
     total: orders.length,
